@@ -22,7 +22,9 @@ if (__DEVELOPMENT__) {
 // https://github.com/halt-hammerzeit/webpack-isomorphic-tools
 var WebpackIsomorphicTools = require('webpack-isomorphic-tools');
 global.webpackIsomorphicTools = new WebpackIsomorphicTools(require('../webpack/webpack-isomorphic-tools'))
-  .development(__DEVELOPMENT__)
   .server(rootDir, function() {
     require('../src/server');
   });
+
+
+  // .development(__DEVELOPMENT__) // Throwing an error in Development => https://github.com/halt-hammerzeit/webpack-isomorphic-tools/issues/114
