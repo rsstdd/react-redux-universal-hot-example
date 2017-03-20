@@ -3,6 +3,12 @@ import config from '../config';
 
 const methods = ['get', 'post', 'put', 'patch', 'del'];
 
+// Config:
+// host: process.env.HOST || 'localhost',
+// port: process.env.PORT,
+// apiHost: process.env.APIHOST || 'localhost',
+// apiPort: process.env.APIPORT,
+
 function formatUrl(path) {
   const adjustedPath = path[0] !== '/' ? '/' + path : path;
   if (__SERVER__) {

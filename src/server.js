@@ -16,8 +16,14 @@ import { match } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import { ReduxAsyncConnect, loadOnServer } from 'redux-async-connect';
 import createHistory from 'react-router/lib/createMemoryHistory';
-import {Provider} from 'react-redux';
+import { Provider } from 'react-redux';
 import getRoutes from './routes';
+
+// Config:
+// host: process.env.HOST || 'localhost',
+// port: process.env.PORT,
+// apiHost: process.env.APIHOST || 'localhost',
+// apiPort: process.env.APIPORT,
 
 const targetUrl = 'http://' + config.apiHost + ':' + config.apiPort;
 const pretty = new PrettyError();
@@ -25,7 +31,7 @@ const app = new Express();
 const server = new http.Server(app);
 const proxy = httpProxy.createProxyServer({
   target: targetUrl,
-  ws: true
+  ws: true // bool; If you want to proxy websockets https://github.com/nodejitsu/node-http-proxy/blob/master/lib/http-proxy.js#L22-L50
 });
 
 app.use(compression());
@@ -38,6 +44,9 @@ app.use('/api', (req, res) => {
   proxy.web(req, res, {target: targetUrl});
 });
 
+
+// ws req, socket, head, [options] (used for proxying WS(S) requests)
+// ./api/api.js ==> io.path('/ws');
 app.use('/ws', (req, res) => {
   proxy.web(req, res, {target: targetUrl + '/ws'});
 });
@@ -66,6 +75,7 @@ app.use((req, res) => {
     // hot module replacement is enabled in the development env
     webpackIsomorphicTools.refresh();
   }
+
   const client = new ApiClient(req);
   const memoryHistory = createHistory(req.originalUrl);
   const store = createStore(memoryHistory, client);
@@ -89,26 +99,29 @@ app.use((req, res) => {
       res.status(500);
       hydrateOnClient();
     } else if (renderProps) {
-      loadOnServer({...renderProps, store, helpers: {client}}).then(() => {
-        const component = (
-          <Provider store={store} key="provider">
-            <ReduxAsyncConnect {...renderProps} />
-          </Provider>
-        );
+      loadOnServer({...renderProps, store, helpers: {client}})
+        .then(() => {
+          const component = (
+            <Provider store={store} key="provider">
+              <ReduxAsyncConnect {...renderProps} />
+            </Provider>
+          );
 
-        res.status(200);
+          res.status(200);
 
-        global.navigator = {userAgent: req.headers['user-agent']};
+          global.navigator = {userAgent: req.headers['user-agent']};
 
-        res.send('<!doctype html>\n' +
-          ReactDOM.renderToString(<Html assets={webpackIsomorphicTools.assets()} component={component} store={store}/>));
-      });
+          res.send('<!doctype html>\n' +
+            ReactDOM.renderToString(<Html assets={webpackIsomorphicTools.assets()} component={component} store={store}/>));
+        });
     } else {
       res.status(404).send('Not found');
     }
   });
 });
 
+
+// Initiate API server
 if (config.port) {
   server.listen(config.port, (err) => {
     if (err) {

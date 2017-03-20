@@ -7,7 +7,8 @@ export default function update(req) {
       if (Math.random() < 0.2) {
         reject('Oh no! Widget save fails 20% of the time. Try again.');
       } else {
-        load(req).then(data => {
+        load(req)
+        .then(data => {
           const widgets = data;
           const widget = req.body;
           if (widget.color === 'Green') {
